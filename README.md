@@ -54,7 +54,7 @@ pip --version
 #### Windows
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/wifi-tester-pro.git
+git clone https://github.com/DiyarNzar/Wifi_tester_pro.git
 cd wifi-tester-pro
 
 # Install dependencies
