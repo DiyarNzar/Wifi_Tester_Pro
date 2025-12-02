@@ -1,0 +1,25 @@
+# WiFi Tester Pro - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# GUI Framework
+customtkinter>=5.2.0
+
+# Network Analysis
+scapy>=2.5.0
+
+# System & Network Utilities
+psutil>=5.9.0
+netifaces>=0.11.0
+
+# Data Visualization
+matplotlib>=3.7.0
+
+# Async Operations
+asyncio-throttle>=1.0.2
+
+# Windows-specific (optional on Linux)
+pywin32>=306; sys_platform == 'win32'
+wmi>=1.5.1; sys_platform == 'win32'
+
+# Utilities
+Pillow>=10.0.0
