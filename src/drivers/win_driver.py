@@ -328,8 +328,9 @@ class WindowsWiFiDriver(WiFiDriverBase):
             result = subprocess.run(
                 ["netsh", "wlan", "show", "profiles"],
                 capture_output=True,
-                text=True,
-                timeout=10
+                timeout=10,
+                encoding='utf-8',
+                errors='ignore'
             )
             
             if result.returncode == 0:
@@ -338,10 +339,59 @@ class WindowsWiFiDriver(WiFiDriverBase):
                         profile = line.split(':')[1].strip()
                         if profile:
                             profiles.append(profile)
-        except:
-            pass
+        except Exception as e:
+            print(f"[WindowsDriver] Error getting profiles: {e}")
         
         return profiles
+    
+    def get_profile_password(self, profile_name: str) -> Optional[str]:
+        """
+        Get the saved password for a WiFi profile.
+        Requires admin privileges to retrieve passwords.
+        
+        Args:
+            profile_name: Name of the WiFi profile
+            
+        Returns:
+            Password string if found, None otherwise
+        """
+        try:
+            result = subprocess.run(
+                ["netsh", "wlan", "show", "profile", f"name={profile_name}", "key=clear"],
+                capture_output=True,
+                timeout=10,
+                encoding='utf-8',
+                errors='ignore'
+            )
+            
+            if result.returncode == 0:
+                for line in result.stdout.split('\n'):
+                    line = line.strip()
+                    # Look for "Key Content" line which contains the password
+                    if 'Key Content' in line and ':' in line:
+                        password = line.split(':', 1)[1].strip()
+                        return password if password else None
+            
+        except Exception as e:
+            print(f"[WindowsDriver] Error getting password for {profile_name}: {e}")
+        
+        return None
+    
+    def get_all_saved_passwords(self) -> Dict[str, Optional[str]]:
+        """
+        Get all saved WiFi passwords.
+        Requires admin privileges.
+        
+        Returns:
+            Dictionary mapping profile names to passwords
+        """
+        passwords = {}
+        profiles = self.get_saved_profiles()
+        
+        for profile in profiles:
+            passwords[profile] = self.get_profile_password(profile)
+        
+        return passwords
     
     def cleanup(self):
         """Cleanup Windows driver resources"""

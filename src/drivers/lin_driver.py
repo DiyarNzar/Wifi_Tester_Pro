@@ -388,9 +388,66 @@ class LinuxWiFiDriver(WiFiDriverBase):
     
     def get_current_connection(self) -> Optional[NetworkInfo]:
         """Get current WiFi connection info on Linux"""
+        # Try nmcli first (more reliable on modern systems)
+        try:
+            result = subprocess.run(
+                ["nmcli", "-t", "-f", "ACTIVE,SSID,BSSID,CHAN,FREQ,SIGNAL,SECURITY", "dev", "wifi"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                for line in result.stdout.strip().split('\n'):
+                    if line.startswith('yes:'):
+                        # Format: yes:SSID:BSSID:CHAN:FREQ:SIGNAL:SECURITY
+                        # BSSID has escaped colons like 4E\:7B\:35\:18\:87\:F0
+                        # First unescape the line
+                        line = line.replace('\\:', '##COLON##')
+                        parts = line.split(':')
+                        
+                        if len(parts) >= 7:
+                            # Restore colons in BSSID
+                            bssid = parts[2].replace('##COLON##', ':')
+                            
+                            # Parse frequency (e.g., "2412 MHz" or "5240 MHz")
+                            freq_str = parts[4].replace(' MHz', '').replace('##COLON##', ':')
+                            try:
+                                freq = float(freq_str) if freq_str else 0
+                            except:
+                                freq = 0
+                            
+                            # Parse signal (percentage, convert to approximate dBm)
+                            try:
+                                signal_pct = int(parts[5]) if parts[5] else 50
+                                signal_dbm = int((signal_pct / 2) - 100)  # Rough conversion
+                            except:
+                                signal_dbm = -70
+                            
+                            # Calculate channel from frequency
+                            channel = int(parts[3]) if parts[3].isdigit() else 0
+                            
+                            connection_data = {
+                                'ssid': parts[1].replace('##COLON##', ':') if parts[1] else '<Hidden>',
+                                'bssid': bssid,
+                                'channel': channel,
+                                'frequency': freq,
+                                'signal': signal_dbm,
+                                'security': parts[6].replace('##COLON##', ':') if len(parts) > 6 else 'Open'
+                            }
+                            return self._create_network_info(connection_data)
+        except Exception as e:
+            print(f"[LinuxDriver] nmcli method failed: {e}")
+        
+        # Fallback to iwconfig
         iface = self._current_interface
         if not iface:
-            return None
+            # Try to find a wireless interface
+            interfaces = self.get_interfaces()
+            if interfaces:
+                iface = interfaces[0].name
+            else:
+                return None
         
         try:
             result = subprocess.run(

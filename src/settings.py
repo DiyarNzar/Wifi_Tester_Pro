@@ -185,6 +185,16 @@ class Layout:
     PAD_XL = THEME["spacing"].get("xl", 24)
     PAD_XXL = THEME["spacing"].get("xxl", 32)
     
+    # Aliases for compatibility
+    PADDING_SM = PAD_SM
+    PADDING_MD = PAD_MD
+    PADDING_LG = PAD_LG
+    
+    # Border radius
+    BORDER_RADIUS = 12
+    BORDER_RADIUS_SM = 8
+    BORDER_RADIUS_LG = 16
+    
     SIDEBAR_WIDTH = THEME["components"]["sidebar"].get("width", 220)
     TERMINAL_MAX_LINES = THEME["components"]["terminal"].get("max_lines", 1000)
     

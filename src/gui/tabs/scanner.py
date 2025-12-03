@@ -269,14 +269,17 @@ class ScannerTab(ctk.CTkFrame):
         )
         self._network_scroll.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         
-        # Status label
+        # Status label (placed in scroll frame initially, will be managed separately)
+        self._status_frame = ctk.CTkFrame(self._network_scroll, fg_color="transparent")
+        self._status_frame.pack(fill="x", pady=50)
+        
         self._status_label = ctk.CTkLabel(
-            self._network_scroll,
+            self._status_frame,
             text="Click 'Start Scan' to discover networks",
             font=(Fonts.FAMILY, Fonts.SIZE_MD),
             text_color=Colors.TEXT_MUTED
         )
-        self._status_label.pack(pady=50)
+        self._status_label.pack()
     
     def _create_details_panel(self):
         """Create selected network details panel"""
@@ -320,12 +323,15 @@ class ScannerTab(ctk.CTkFrame):
     def _start_scan(self):
         """Start network scan"""
         if not self._driver:
-            self._logger.error("No driver available", "Scanner")
+            if self._logger:
+                self._logger.error("No driver available", "Scanner")
             return
         
         self._is_scanning = True
         self._scan_button.configure(text="⏹ Stop")
-        self._status_label.configure(text="Scanning...")
+        
+        # Show scanning status
+        self._show_status("Scanning...")
         
         if self._session:
             self._session.is_scanning = True
@@ -373,7 +379,8 @@ class ScannerTab(ctk.CTkFrame):
         if self._session:
             self._session.is_scanning = False
         
-        self._status_label.configure(text=f"Scan error: {error}")
+        # Show error status
+        self._show_status(f"Scan error: {error}")
         
         if self._logger:
             self._logger.error(f"Scan error: {error}", "Scanner")
@@ -386,6 +393,25 @@ class ScannerTab(ctk.CTkFrame):
         if self._session:
             self._session.is_scanning = False
     
+    def _show_status(self, text: str):
+        """Show status message in the network list area"""
+        # Clear existing content
+        for widget in self._network_scroll.winfo_children():
+            widget.destroy()
+        self._network_rows.clear()
+        
+        # Create new status frame and label
+        self._status_frame = ctk.CTkFrame(self._network_scroll, fg_color="transparent")
+        self._status_frame.pack(fill="x", pady=50)
+        
+        self._status_label = ctk.CTkLabel(
+            self._status_frame,
+            text=text,
+            font=(Fonts.FAMILY, Fonts.SIZE_MD),
+            text_color=Colors.TEXT_MUTED
+        )
+        self._status_label.pack()
+    
     def _update_network_list(self, networks: List[NetworkInfo]):
         """Update the network list display"""
         # Clear existing rows
@@ -394,13 +420,7 @@ class ScannerTab(ctk.CTkFrame):
         self._network_rows.clear()
         
         if not networks:
-            self._status_label = ctk.CTkLabel(
-                self._network_scroll,
-                text="No networks found",
-                font=(Fonts.FAMILY, Fonts.SIZE_MD),
-                text_color=Colors.TEXT_MUTED
-            )
-            self._status_label.pack(pady=50)
+            self._show_status("No networks found")
             return
         
         # Sort by signal strength

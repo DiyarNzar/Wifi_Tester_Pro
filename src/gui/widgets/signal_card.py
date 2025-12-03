@@ -5,21 +5,8 @@ Visual cards for displaying WiFi signal and network information
 
 import customtkinter as ctk
 from typing import Optional, Dict, Any, Callable
-from dataclasses import dataclass
 
-from ...settings import Colors, Fonts, Layout
-
-
-@dataclass
-class NetworkInfo:
-    """Data class for network information"""
-    ssid: str
-    bssid: str
-    signal_strength: int  # dBm
-    channel: int
-    security: str
-    frequency: str = "2.4 GHz"
-    is_connected: bool = False
+from ...settings import Colors, Fonts, Layout, NetworkInfo
 
 
 class SignalCard(ctk.CTkFrame):
@@ -36,7 +23,7 @@ class SignalCard(ctk.CTkFrame):
     ):
         super().__init__(
             parent,
-            fg_color=Colors.SURFACE,
+            fg_color=Colors.SURFACE_DARK,
             corner_radius=Layout.BORDER_RADIUS,
             **kwargs
         )
@@ -159,7 +146,7 @@ class NetworkCard(ctk.CTkFrame):
     ):
         super().__init__(
             parent,
-            fg_color=Colors.SURFACE,
+            fg_color=Colors.SURFACE_DARK,
             corner_radius=Layout.BORDER_RADIUS,
             border_width=1,
             border_color=Colors.BORDER,

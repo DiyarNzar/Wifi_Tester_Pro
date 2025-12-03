@@ -7,6 +7,7 @@ import customtkinter as ctk
 from typing import Callable, Optional, Dict
 
 from ..settings import Colors, Fonts, Layout, APP_NAME, APP_VERSION
+from .settings_dialog import SettingsDialog
 
 
 class NavButton(ctk.CTkButton):
@@ -194,9 +195,17 @@ class NavigationFrame(ctk.CTkFrame):
             self._on_navigate(page_name)
     
     def _open_settings(self):
-        """Open settings (placeholder)"""
-        # TODO: Implement settings dialog
-        pass
+        """Open settings dialog"""
+        # Get the main window (root)
+        root = self.winfo_toplevel()
+        
+        # Get session if available
+        session = None
+        if hasattr(root, '_session'):
+            session = root._session
+        
+        # Open settings dialog
+        SettingsDialog(root, session=session)
     
     def set_active(self, page_name: str):
         """Set the active navigation button"""

@@ -9,6 +9,7 @@ import time
 
 from ...settings import Colors, Fonts, Layout, IS_WINDOWS, IS_KALI, RUNNING_AS_ADMIN
 from ..utils import create_button, create_label, create_card
+from ..passwords_dialog import SavedPasswordsDialog
 
 
 class StatCard(ctk.CTkFrame):
@@ -193,26 +194,27 @@ class DashboardTab(ctk.CTkFrame):
             ("Start Scan", "📡", Colors.PRIMARY, self._start_scan),
             ("Current Network", "🌐", Colors.SUCCESS, self._show_current),
             ("Security Audit", "🔒", Colors.WARNING, self._start_audit),
+            ("View Passwords", "🔑", Colors.ACCENT, self._view_passwords),
             ("Refresh All", "🔄", Colors.INFO, self._refresh),
         ]
         
         for i, (text, icon, color, cmd) in enumerate(actions):
-            row = i // 2
-            col = i % 2
+            row = i // 3
+            col = i % 3
             
             btn = ctk.CTkButton(
                 actions_grid,
                 text=f"{icon}\n{text}",
                 font=(Fonts.FAMILY, Fonts.SIZE_MD),
-                width=150,
-                height=100,
+                width=120,
+                height=90,
                 corner_radius=12,
                 fg_color=Colors.SURFACE_LIGHT,
                 hover_color=color,
                 text_color=Colors.TEXT_PRIMARY,
                 command=cmd
             )
-            btn.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+            btn.grid(row=row, column=col, padx=8, pady=8, sticky="nsew")
             
             actions_grid.grid_columnconfigure(col, weight=1)
         
@@ -267,10 +269,15 @@ class DashboardTab(ctk.CTkFrame):
     
     def _show_current(self):
         """Show current network info"""
-        if self._driver:
+        from ..utils import show_message
+        
+        if not self._driver:
+            show_message("Current Network", "Driver not initialized", "warning")
+            return
+        
+        try:
             current = self._driver.get_current_connection()
             if current:
-                from ..utils import show_message
                 show_message(
                     "Current Network",
                     f"SSID: {current.ssid}\n"
@@ -281,14 +288,20 @@ class DashboardTab(ctk.CTkFrame):
                     "info"
                 )
             else:
-                from ..utils import show_message
                 show_message("Current Network", "Not connected to any network", "info")
+        except Exception as e:
+            show_message("Current Network", f"Error getting connection: {e}", "error")
     
     def _start_audit(self):
         """Navigate to auditor page"""
         root = self.winfo_toplevel()
         if hasattr(root, 'show_page'):
             root.show_page("auditor")
+    
+    def _view_passwords(self):
+        """Open the saved passwords dialog"""
+        root = self.winfo_toplevel()
+        SavedPasswordsDialog(root, driver=self._driver)
     
     def _refresh(self):
         """Refresh dashboard data"""

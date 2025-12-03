@@ -2,6 +2,7 @@
 from .main_window import MainWindow
 from .navigation import NavigationFrame
 from .utils import create_button, create_label, show_message, center_window
+from .settings_dialog import SettingsDialog
 
 __all__ = [
     'MainWindow',
@@ -10,4 +11,5 @@ __all__ = [
     'create_label', 
     'show_message',
     'center_window',
+    'SettingsDialog',
 ]
